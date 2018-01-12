@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.tangyc.clientdemo.MainActivity">
+
+    <Button
+        android:id="@+id/btn_get"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GET请求"/>
+
+    <Button
+        android:id="@+id/btn_get_input"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GET下载"/>
+    <Button
+        android:id="@+id/btn_post"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="POST普通请求"/>
+    <Button
+        android:id="@+id/btn_post_form"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="POST表单请求"/>
+    <Button
+        android:id="@+id/btn_post_form_map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="POST表单请求Map"/>
+    <Button
+        android:id="@+id/btn_post_Multipart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="POST文件上传"/>
+    <ImageView
+        android:id="@+id/iv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
