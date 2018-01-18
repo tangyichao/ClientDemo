@@ -1,12 +1,18 @@
 package com.com.tangyc.retrofit.client;
 
-import retrofit.mime.TypedOutput;
+import retrofit.client.Request;
+import retrofit.client.Response;
 
 /**
+ * 前三个接口参照HttpURLConnection
  * @author tangyichao.
  */
 
 public class SoSocketJNI {
+    static {
+        System.loadLibrary("SoSocket");
+    }
+    //*******************************参照HttpURLConnection 请求方式接口********************//
     /**
      * 传递URL 获取唯一网络请求
      * @param url 请求链接
@@ -29,4 +35,20 @@ public class SoSocketJNI {
      * @return  响应的数值
      */
     public static native Object getType(long handle,String type);
+
+
+
+
+
+    /************************************************第二种JNI实现方式*****************************************/
+
+
+    /**
+     * 只能普通请求
+     * 把Request对象 封装 通过JNI 封装成Response 然后获取Response内容
+     * @param request Request请求内容
+     * @return  Response  返回内容
+     *
+     */
+    public static native Response requestToResponse(Request request);
 }

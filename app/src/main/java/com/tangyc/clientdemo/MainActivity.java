@@ -2,7 +2,6 @@ package com.tangyc.clientdemo;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.com.tangyc.retrofit.client.moni.SoRequestToReponseClient;
 import com.google.gson.Gson;
 import com.wealoha.libcurldroid.CurlHttp;
 import com.wealoha.libcurldroid.retrofit.RetrofitCurlClient;
@@ -26,6 +26,7 @@ import retrofit.RestAdapter;
 import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
 import retrofit.mime.TypedFile;
+import retrofit2.Retrofit;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -106,7 +107,37 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        findViewById(R.id.btn_moni).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                RestAdapter adapter=new RestAdapter.Builder().setClient(new SoRequestToReponseClient()).setEndpoint("http://mpic.tiankong.com").setLogLevel(RestAdapter.LogLevel.BASIC).build();
+                MyService service= adapter.create(MyService.class);
+                Observable<Response> observable=service.imageRepos();
+                observable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Subscriber<Response>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(LOG, "Retrofit--->"+e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(Response response) {
+                        try {
+                            InputStream in=response.getBody().in();
+                            Toast.makeText(MainActivity.this,"模拟请求"+inputStream2String(in),Toast.LENGTH_LONG).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+            }
+        });
 
 //        RestAdapter adapter1=new RestAdapter.Builder().setClient(client).setEndpoint("http://116.196.121.20").setLogLevel(RestAdapter.LogLevel.BASIC).build();
 //        GetService postService= adapter1.create(GetService.class);
@@ -222,14 +253,15 @@ public class MainActivity extends AppCompatActivity {
                });
            }
        });
+       //文件上传。。。。 小文件没问题
        findViewById(R.id.btn_post_Multipart).setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               RestAdapter multiparAdapter=new RestAdapter.Builder().setClient(client).setEndpoint("http://japi.juhe.cn").setLogLevel(RestAdapter.LogLevel.BASIC).build();
+               RestAdapter multiparAdapter=new RestAdapter.Builder().setEndpoint("http://japi.juhe.cn").setClient(client).setLogLevel(RestAdapter.LogLevel.BASIC).build();
                MultipartService multipartService= multiparAdapter.create(MultipartService.class);
-               String path=Environment.getExternalStorageDirectory().getPath()+"/test_20171021171543.png";
+               String path=Environment.getExternalStorageDirectory().getPath()+"/color.zip";
                File file=  new File(path);
-               TypedFile typefile=new TypedFile("image/jpeg",file);
+               TypedFile typefile=new TypedFile("application/x-zip-compressed",file);
                Observable<Response> formObservable=multipartService.listRepos(typefile);
                formObservable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Subscriber<Response>() {
                    @Override

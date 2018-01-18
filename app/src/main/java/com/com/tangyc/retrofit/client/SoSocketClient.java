@@ -24,6 +24,7 @@ public class SoSocketClient implements Client {
     private static final int CONNECT_TIMEOUT_MILLIS = 15 * 1000;
     private  static final int READ_TIMEOUT_MILLIS = 20 * 1000;
     private static final int CHUNK_SIZE = 4096;
+    private static final int ERROR_NET_CODE400=400;
 
     public SoSocketClient() {
     }
@@ -31,38 +32,39 @@ public class SoSocketClient implements Client {
     @Override public Response execute(Request request) throws IOException {
 
         long handle=SoSocketJNI.initJNI(request.getUrl());
-        SoSocketJNI.initType(handle,"ConnectTimeout",CONNECT_TIMEOUT_MILLIS);
-        SoSocketJNI.initType(handle,"ReadTimeout",READ_TIMEOUT_MILLIS);
-        SoSocketJNI.initType(handle,"RequestMethod",request.getMethod());
-        SoSocketJNI.initType(handle,"DoInput",true);
+        SoSocketJNI.initType(handle,SocketType.CONNECT_TIMEOUT,CONNECT_TIMEOUT_MILLIS);
+        SoSocketJNI.initType(handle,SocketType.READ_TIMEOUT,READ_TIMEOUT_MILLIS);
+        SoSocketJNI.initType(handle,SocketType.REQUEST_METHOD,request.getMethod());
+        SoSocketJNI.initType(handle,SocketType.DO_INPUT,true);
         for (Header header : request.getHeaders()) {
             SoSocketJNI.initType(handle,"header",header.getName()+","+header.getValue());
         }
-
         TypedOutput body = request.getBody();
         if (body != null) {
-            SoSocketJNI.initType(handle,"DDoOutput",true);
-            SoSocketJNI.initType(handle,"Content-Type",body.mimeType());
+            SoSocketJNI.initType(handle,SocketType.DO_INPUT,true);
+            SoSocketJNI.initType(handle,SocketType.CONTENT_TYPE,body.mimeType());
             long length = body.length();
             if (length != -1) {
-                SoSocketJNI.initType(handle,"FixedLengthStreamingMode",(int) length);
-                SoSocketJNI.initType(handle,"Content-Length",String.valueOf(length));
+                SoSocketJNI.initType(handle,SocketType.FIXED_LENGTH_STREAMING_MODE,(int) length);
+                SoSocketJNI.initType(handle,SocketType.CONTENT_LENGTH,String.valueOf(length));
             } else {
-                SoSocketJNI.initType(handle,"ChunkedStreamingMode",CHUNK_SIZE);
+                SoSocketJNI.initType(handle,SocketType.CHUNKED_STREAMING_MODE,CHUNK_SIZE);
             }
-            byte[] mByte= (byte[]) SoSocketJNI.getType(handle,"OutputStream");
+            byte[] mByte= (byte[]) SoSocketJNI.getType(handle,SocketType.OUTPUT_STREAM);
             OutputStream ops=new ByteArrayOutputStream(mByte.length);
             ops.write(mByte);
             body.writeTo(ops);
+            ops.flush();
+            ops.close();
         }
-        int status= (Integer) SoSocketJNI.getType(handle,"ResponseCode");
-        String reason= (String) SoSocketJNI.getType(handle,"ResponseMessage");
+        int status= (Integer) SoSocketJNI.getType(handle,SocketType.RESPONSE_CODE);
+        String reason= (String) SoSocketJNI.getType(handle,SocketType.RESPONSE_MESSAGE);
         if (reason == null)
         {
             reason = "";
         }
 
-        List<Header> headers = new ArrayList<Header>();
+       ArrayList<Header> headers = new ArrayList<Header>();
         String[] headersFields= (String[]) SoSocketJNI.getType(handle,"getHeaderFields");
         for(String header:headersFields){
             String[] h2v=header.split(",");
@@ -70,10 +72,10 @@ public class SoSocketClient implements Client {
             String value=h2v[1];
             headers.add(new Header(name,value));
         }
-        String mimeType= (String) SoSocketJNI.getType(handle,"ContentType");
-        int length= (Integer) SoSocketJNI.getType(handle,"ContentLength");
+        String mimeType= (String) SoSocketJNI.getType(handle,SocketType.RESPONSE_CONTENT_TYPE );
+        int length= (Integer) SoSocketJNI.getType(handle,SocketType.RESPONSE_CONTENT_LENGT);
         InputStream stream;
-        if (status >= 400) {
+        if (status >= ERROR_NET_CODE400) {
             byte[] mByte=(byte[])SoSocketJNI.getType(handle,"ErrorStream");
             stream = new ByteArrayInputStream(mByte);
         } else {
